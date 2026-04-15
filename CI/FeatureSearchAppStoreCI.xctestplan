@@ -1,0 +1,30 @@
+{
+  "configurations" : [
+    {
+      "id" : "477448F5-9F88-42FF-8592-5ED05017831F",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "performanceAntipatternCheckerEnabled" : true,
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:FeatureSearchAppStoreCI.xcodeproj",
+      "identifier" : "559AF6402F8F570B003BF7FB",
+      "name" : "FeatureSearchAppStoreCI"
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:FeatureSearchAppStoreCI.xcodeproj",
+        "identifier" : "559AF64D2F8F570B003BF7FB",
+        "name" : "FeatureSearchAppStoreCITests"
+      }
+    }
+  ],
+  "version" : 1
+}
