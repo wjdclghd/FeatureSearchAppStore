@@ -20,13 +20,13 @@ let package = Package(
         )
     ],
     dependencies: [
-        
+        .package(path: "../../Modules/AppDomain")
     ],
     targets: [
         .target(
             name: "FeatureSearchAppStore",
             dependencies: [
-                
+                "AppDomain"
             ],
             path: "Sources/FeatureSearchAppStore",
             linkerSettings: [
@@ -37,7 +37,7 @@ let package = Package(
             name: "FeatureSearchAppStoreTests",
             dependencies: [
                 "FeatureSearchAppStore",
-                
+                "AppDomain"
             ],
             path: "Tests/FeatureSearchAppStoreTests",
             linkerSettings: [
