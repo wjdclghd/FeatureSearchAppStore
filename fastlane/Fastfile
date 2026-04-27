@@ -14,7 +14,7 @@ platform :ios do
 
     scan(
       scheme: "FeatureSearchAppStoreCI",
-      project: "CI/FeatureSearchAppStore.xcodeproj",
+      project: "CI/FeatureSearchAppStoreCI.xcodeproj",
       clean: true,
       code_coverage: true,
       output_directory: "fastlane/test_output",
