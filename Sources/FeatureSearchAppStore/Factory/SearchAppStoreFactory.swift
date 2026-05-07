@@ -48,15 +48,18 @@ public enum SearchAppStoreFactory {
     }
 
     public static func makeSearchAppStoreDetailView<
-        DetailUseCase: SearchAppStoreDetailUseCaseProtocol
+        DetailUseCase: SearchAppStoreDetailUseCaseProtocol,
+        Coordinator: SearchAppStoreCoordinatorProtocol
     >(
         useCase: DetailUseCase,
+        coordinator: Coordinator,
         trackId: Int
-    ) -> SearchAppStoreDetailView<DetailUseCase> {
+    ) -> SearchAppStoreDetailView<DetailUseCase, Coordinator> {
         let viewModel = SearchAppStoreDetailViewModel(useCase: useCase)
 
         return SearchAppStoreDetailView(
             viewModel: viewModel,
+            coordinator: coordinator,
             trackId: trackId
         )
     }

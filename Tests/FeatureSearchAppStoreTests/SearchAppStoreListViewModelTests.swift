@@ -42,8 +42,13 @@ final class SearchAppStoreListViewModelTests: XCTestCase {
      ViewModel이 목록 항목 선택 시 올바른 trackId로 상세 이동 요청을 보내는지 확인합니다.
      */
     private final class MockSearchAppStoreListCoordinator: SearchAppStoreCoordinatorProtocol, @unchecked Sendable {
+        var popCallCount = 0
         var showSearchAppStoreDetailCallCount = 0
         var receivedTrackId: Int?
+
+        func pop() {
+            popCallCount += 1
+        }
 
         func showSearchAppStoreDetail(trackId: Int) {
             showSearchAppStoreDetailCallCount += 1
@@ -156,5 +161,21 @@ final class SearchAppStoreListViewModelTests: XCTestCase {
 
         XCTAssertEqual(coordinator.showSearchAppStoreDetailCallCount, 1)
         XCTAssertEqual(coordinator.receivedTrackId, 42)
+    }
+
+    /*
+     뒤로가기 버튼 선택 시 Coordinator로 pop 요청이 전달되는지 검증합니다.
+     */
+    func test_backButtonTapped_requestsPopRoute() {
+        let useCase = MockSearchAppStoreListUseCase()
+        let coordinator = MockSearchAppStoreListCoordinator()
+        let viewModel = SearchAppStoreListViewModel(
+            useCase: useCase,
+            coordinator: coordinator
+        )
+
+        viewModel.backButtonTapped()
+
+        XCTAssertEqual(coordinator.popCallCount, 1)
     }
 }
