@@ -7,6 +7,8 @@
 
 import SwiftUI
 import AppDomain
+import DesignSystem
+import UIComponents
 
 /*
  SearchAppStore 목록 화면을 렌더링하는 View입니다.
@@ -31,10 +33,25 @@ public struct SearchAppStoreListView<
     }
 
     public var body: some View {
-        content
-            .navigationTitle("검색 결과")
+        navigationConfiguredContent
             .task(id: searchKeyword) {
                 await viewModel.load(searchKeyword: searchKeyword)
+            }
+    }
+
+    private var navigationConfiguredContent: some View {
+        content
+            .navigationTitle("검색 결과")
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    BackButton {
+                        Task { @MainActor in
+                            viewModel.backButtonTapped()
+                        }
+                    }
+                }
             }
     }
 
@@ -76,27 +93,30 @@ public struct SearchAppStoreListView<
                 Button {
                     viewModel.didSelectItem(item)
                 } label: {
-                    HStack(alignment: .top, spacing: 12) {
+                    HStack(alignment: .top, spacing: DSSpacing.sm) {
                         artworkView(urlString: item.artworkUrl100)
 
-                        VStack(alignment: .leading, spacing: 4) {
+                        VStack(alignment: .leading, spacing: 2) {
                             Text(item.trackName)
-                                .font(.headline)
+                                .font(.system(size: 16, weight: .semibold))
+                                .lineLimit(2)
 
                             Text(item.artistName)
-                                .font(.subheadline)
+                                .font(.system(size: 14, weight: .regular))
                                 .foregroundStyle(.secondary)
+                                .lineLimit(1)
 
                             if let rating = item.averageUserRating {
                                 Text("평점: \(rating, specifier: "%.1f")")
-                                    .font(.caption)
+                                    .font(.system(size: 12, weight: .regular))
                                     .foregroundStyle(.secondary)
                             }
                         }
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, DSSpacing.xs)
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("searchResults.item.\(item.trackId)")
             }
             .listStyle(.plain)
         }
@@ -110,13 +130,13 @@ public struct SearchAppStoreListView<
                 switch phase {
                 case .empty:
                     ProgressView()
-                        .frame(width: 60, height: 60)
+                        .frame(width: 48, height: 48)
                 case let .success(image):
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                        .frame(width: 60, height: 60)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .frame(width: 48, height: 48)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
                 case .failure:
                     placeholderArtwork
                 default:
@@ -132,7 +152,7 @@ public struct SearchAppStoreListView<
         Image(systemName: "photo")
             .resizable()
             .aspectRatio(contentMode: .fit)
-            .frame(width: 60, height: 60)
+            .frame(width: 48, height: 48)
             .foregroundStyle(.gray)
     }
 }

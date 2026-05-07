@@ -71,4 +71,9 @@ public final class SearchAppStoreListViewModel<
     public func didSelectItem(_ item: SearchAppStoreListEntity) {
         coordinator.showSearchAppStoreDetail(trackId: item.trackId)
     }
+
+    /// 사용자가 뒤로가기 버튼을 눌렀을 때 이전 화면 이동을 요청합니다.
+    public func backButtonTapped() {
+        coordinator.pop()
+    }
 }
