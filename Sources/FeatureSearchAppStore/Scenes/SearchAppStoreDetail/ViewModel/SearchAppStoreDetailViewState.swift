@@ -8,15 +8,20 @@
 import Foundation
 import AppDomain
 
-/*
- SearchAppStore 상세 화면의 렌더링 상태를 표현합니다.
+/// SearchAppStore 상세 화면의 렌더링 상태입니다.
+public struct SearchAppStoreDetailViewState: Equatable {
+    public var loadState: LoadState = .idle
 
- View는 이 상태를 관찰하여 로딩, 성공, 실패를 렌더링합니다.
- ViewModel은 상세 조회 UseCase 실행 결과를 화면 관점의 상태로 변환합니다.
- */
-public enum SearchAppStoreDetailViewState: Sendable {
-    case initial
-    case loading
-    case loaded(SearchAppStoreDetailEntity)
-    case error(String)
+    public init() {}
+}
+
+extension SearchAppStoreDetailViewState {
+
+    /// 상세 조회 상태를 나타냅니다.
+    public enum LoadState: Equatable {
+        case idle
+        case loading
+        case success(SearchAppStoreDetailEntity)
+        case failure(SearchAppStoreDomainError)
+    }
 }
