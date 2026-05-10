@@ -10,19 +10,16 @@ import AppDomain
 import DesignSystem
 import UIComponents
 
-/*
- SearchAppStore 목록 화면을 렌더링하는 View입니다.
-
- 이 View는 ViewModel이 제공하는 SearchAppStoreListViewState만 관찰하며,
- 목록 데이터 렌더링과 사용자 입력 전달만 담당합니다.
- 실제 비즈니스 로직과 화면 이동 결정은 ViewModel과 App 레이어 coordinator가 담당합니다.
- */
+/// SearchAppStore 목록 화면을 렌더링하는 View입니다.
 public struct SearchAppStoreListView<
     UseCase: SearchAppStoreListUseCaseProtocol,
     Coordinator: SearchAppStoreCoordinatorProtocol
 >: View {
     @StateObject private var viewModel: SearchAppStoreListViewModel<UseCase, Coordinator>
     private let searchKeyword: String
+
+    @Environment(\.imagePipeline) private var pipeline
+    @Environment(\.displayScale) private var displayScale
 
     public init(
         viewModel: SearchAppStoreListViewModel<UseCase, Coordinator>,
@@ -47,9 +44,7 @@ public struct SearchAppStoreListView<
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     BackButton {
-                        Task { @MainActor in
-                            viewModel.backButtonTapped()
-                        }
+                        viewModel.backButtonTapped()
                     }
                 }
             }
@@ -57,59 +52,50 @@ public struct SearchAppStoreListView<
 
     @ViewBuilder
     private var content: some View {
-        switch viewModel.viewState {
-        case .initial, .loading:
+        switch viewModel.viewState.loadState {
+        case .idle, .loading:
             VStack {
                 ProgressView("검색 중...")
                     .padding()
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-        case .noResults:
-            VStack {
-                Text("검색 결과가 없습니다.")
-                    .foregroundStyle(.secondary)
-                    .padding()
+        case .empty:
+            EmptyStateView(title: "검색 결과가 없습니다.")
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+        case let .failure(error):
+            ErrorStateView(message: error.localizedDescription) {
+                viewModel.retryButtonTapped()
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-        case let .error(message):
-            VStack(spacing: 16) {
-                Text(message)
-                    .foregroundStyle(.red)
-                    .multilineTextAlignment(.center)
-
-                Button("다시 시도") {
-                    Task {
-                        await viewModel.load(searchKeyword: searchKeyword)
-                    }
-                }
-            }
-            .padding()
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-        case let .loaded(items):
-            List(items) { item in
+        case let .success(items):
+            List(Array(items.enumerated()), id: \.element.trackId) { index, item in
                 Button {
-                    viewModel.didSelectItem(item)
+                    viewModel.itemTapped(trackId: item.trackId)
                 } label: {
                     HStack(alignment: .top, spacing: DSSpacing.sm) {
-                        artworkView(urlString: item.artworkUrl100)
+                        artworkView(
+                            artworkUrl100: item.artworkUrl100,
+                            artworkUrl512: item.artworkUrl512
+                        )
 
-                        VStack(alignment: .leading, spacing: 2) {
+                        VStack(alignment: .leading, spacing: DSSpacing.xs) {
                             Text(item.trackName)
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(DSTypography.headline)
+                                .foregroundStyle(DSColor.textPrimary)
                                 .lineLimit(2)
 
                             Text(item.artistName)
-                                .font(.system(size: 14, weight: .regular))
-                                .foregroundStyle(.secondary)
+                                .font(DSTypography.body2)
+                                .foregroundStyle(DSColor.textSecondary)
                                 .lineLimit(1)
 
                             if let rating = item.averageUserRating {
                                 Text("평점: \(rating, specifier: "%.1f")")
-                                    .font(.system(size: 12, weight: .regular))
-                                    .foregroundStyle(.secondary)
+                                    .font(DSTypography.caption1)
+                                    .foregroundStyle(DSColor.textSecondary)
                             }
                         }
                     }
@@ -117,42 +103,35 @@ public struct SearchAppStoreListView<
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("searchResults.item.\(item.trackId)")
+                .onAppear {
+                    let nextRange = (index + 1)..<min(index + 4, items.count)
+                    for nextItem in items[nextRange] {
+                        let urls = [nextItem.artworkUrl512, nextItem.artworkUrl100]
+                            .compactMap { $0.flatMap { URL(string: $0) } }
+                        prefetchRemoteImages(
+                            preferredURLs: urls,
+                            configuration: .appIconList,
+                            displayScale: displayScale,
+                            pipeline: pipeline
+                        )
+                    }
+                }
             }
             .listStyle(.plain)
         }
     }
 
     @ViewBuilder
-    private func artworkView(urlString: String?) -> some View {
-        if let urlString,
-           let url = URL(string: urlString) {
-            AsyncImage(url: url) { phase in
-                switch phase {
-                case .empty:
-                    ProgressView()
-                        .frame(width: 48, height: 48)
-                case let .success(image):
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 48, height: 48)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                case .failure:
-                    placeholderArtwork
-                default:
-                    placeholderArtwork
-                }
-            }
-        } else {
-            placeholderArtwork
-        }
-    }
+    private func artworkView(
+        artworkUrl100: String?,
+        artworkUrl512: String?
+    ) -> some View {
+        let urls = [artworkUrl512, artworkUrl100]
+            .compactMap { $0.flatMap { URL(string: $0) } }
 
-    private var placeholderArtwork: some View {
-        Image(systemName: "photo")
-            .resizable()
-            .aspectRatio(contentMode: .fit)
-            .frame(width: 48, height: 48)
-            .foregroundStyle(.gray)
+        RemoteImageView(
+            preferredURLs: urls,
+            configuration: .appIconList
+        )
     }
 }

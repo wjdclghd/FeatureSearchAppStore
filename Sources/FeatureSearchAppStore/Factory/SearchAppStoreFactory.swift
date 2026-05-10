@@ -8,26 +8,19 @@
 import Foundation
 import AppDomain
 
-/*
- SearchAppStore Feature 내부 화면 조립을 담당하는 factory입니다.
-
- 이 타입은 Feature 내부의 ViewModel, View, Protocol 계약을 한 곳에서 연결하여
- App 레이어가 화면을 생성할 때 필요한 진입점을 제공합니다.
- 실제 UseCase 구현체 생성과 외부 모듈 concrete 조립은 App 레이어에서 수행하고,
- 이 factory는 전달받은 의존성을 바탕으로 Feature 내부 화면만 조립합니다.
-
- 담당 역할
- - 목록 화면 ViewModel과 View 생성
- - 상세 화면 ViewModel과 View 생성
- - Feature 내부 화면 조립 진입점 제공
-
- 담당하지 않는 역할
- - Networking, AppData concrete 생성
- - AppDomain UseCase concrete 생성
- - Feature 간 이동 흐름 결정
- */
+/// SearchAppStore Feature 화면 조립 진입점입니다.
+///
+/// App 레이어에서 전달받은 UseCase와 Coordinator를 바탕으로 Feature 화면만 조립합니다.
+/// UseCase concrete 생성과 외부 모듈 조립은 App 레이어가 담당합니다.
 @MainActor
 public enum SearchAppStoreFactory {
+
+    /// SearchAppStore 목록 화면을 조립하여 반환합니다.
+    ///
+    /// - Parameters:
+    ///   - useCase: 목록 조회에 사용할 UseCase입니다.
+    ///   - coordinator: 화면 이동 계약 구현체입니다.
+    ///   - searchKeyword: 검색에 사용할 키워드입니다.
     public static func makeSearchAppStoreListView<
         UseCase: SearchAppStoreListUseCaseProtocol,
         Coordinator: SearchAppStoreCoordinatorProtocol
@@ -47,6 +40,12 @@ public enum SearchAppStoreFactory {
         )
     }
 
+    /// SearchAppStore 상세 화면을 조립하여 반환합니다.
+    ///
+    /// - Parameters:
+    ///   - useCase: 상세 조회에 사용할 UseCase입니다.
+    ///   - coordinator: 화면 이동 계약 구현체입니다.
+    ///   - trackId: 조회할 앱의 식별자입니다.
     public static func makeSearchAppStoreDetailView<
         DetailUseCase: SearchAppStoreDetailUseCaseProtocol,
         Coordinator: SearchAppStoreCoordinatorProtocol
@@ -55,11 +54,13 @@ public enum SearchAppStoreFactory {
         coordinator: Coordinator,
         trackId: Int
     ) -> SearchAppStoreDetailView<DetailUseCase, Coordinator> {
-        let viewModel = SearchAppStoreDetailViewModel(useCase: useCase)
+        let viewModel = SearchAppStoreDetailViewModel(
+            useCase: useCase,
+            coordinator: coordinator
+        )
 
         return SearchAppStoreDetailView(
             viewModel: viewModel,
-            coordinator: coordinator,
             trackId: trackId
         )
     }

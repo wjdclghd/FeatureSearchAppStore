@@ -21,6 +21,7 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../../Shared/AppDomain"),
+        .package(path: "../../Core/UI/DesignSystem"),
         .package(path: "../../Core/UI/UIComponents")
     ],
     targets: [
@@ -28,11 +29,12 @@ let package = Package(
             name: "FeatureSearchAppStore",
             dependencies: [
                 "AppDomain",
+                "DesignSystem",
                 "UIComponents"
             ],
             path: "Sources/FeatureSearchAppStore",
             linkerSettings: [
-                
+
             ]
         ),
         .testTarget(
@@ -44,7 +46,7 @@ let package = Package(
             ],
             path: "Tests/FeatureSearchAppStoreTests",
             linkerSettings: [
-                
+
             ]
         )
     ]
